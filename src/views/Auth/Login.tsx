@@ -5,8 +5,9 @@ import { useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
+import { signIn } from 'next-auth/react'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm } from 'react-hook-form'
 import * as yup from 'yup'
@@ -51,6 +52,8 @@ const Login = ({ mode }: { mode: Mode }) => {
   // Hooks
 
   const authBackground = useImageVariant(mode, lightImg, darkImg)
+  const searchParams = useSearchParams()
+
   const router = useRouter()
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
@@ -58,7 +61,6 @@ const Login = ({ mode }: { mode: Mode }) => {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors }
   } = useForm<LoginFormValues>({
     defaultValues: {
@@ -69,10 +71,24 @@ const Login = ({ mode }: { mode: Mode }) => {
     resolver: yupResolver<LoginFormValues>(yup.object().shape(LoginValidation))
   })
 
-  const handleLogin = (data: LoginFormValues) => {
-    console.log(data)
-    reset()
-    router.push('/home')
+  const handleLogin = async (data: LoginFormValues) => {
+    const res = await signIn('credentials', {
+      email: data.email,
+      password: data.password,
+      redirect: false
+    })
+
+    if (res && res.ok && res.error === null) {
+      const redirectURL = searchParams.get('redirectTo') ?? '/'
+
+      router.replace(redirectURL)
+    } else {
+      if (res?.error) {
+        const error = JSON.parse(res.error)
+
+        console.log(error)
+      }
+    }
   }
 
   return (
