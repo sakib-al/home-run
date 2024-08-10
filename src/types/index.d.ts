@@ -4,3 +4,9 @@ export type FormError = {
   }
   sx?: object
 }
+
+
+export type UserResponse = {
+  name: string
+  email: string
+}

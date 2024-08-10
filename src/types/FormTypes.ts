@@ -3,7 +3,7 @@ export type RegisterFormValues = {
   email: string | null
   password: string | null
   confirm_password: string | null
-  terms: boolean | null
+  terms: boolean | null | undefined
 }
 
 export type LoginFormValues = {

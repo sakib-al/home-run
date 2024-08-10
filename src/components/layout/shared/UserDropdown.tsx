@@ -21,8 +21,15 @@ import Divider from '@mui/material/Divider'
 import MenuItem from '@mui/material/MenuItem'
 import Button from '@mui/material/Button'
 
+// Third Party Imports
+
+import { toast } from 'react-toastify'
+
 // Hook Imports
+import { signOut, useSession } from 'next-auth/react'
+
 import { useSettings } from '@core/hooks/useSettings'
+import { authService } from '@/service/authService'
 
 // Styled component for badge content
 const BadgeContentSpan = styled('span')({
@@ -43,6 +50,8 @@ const UserDropdown = () => {
 
   // Hooks
   const router = useRouter()
+  const session = useSession()
+  const user = session.data?.user
 
   const { settings } = useSettings()
 
@@ -63,8 +72,16 @@ const UserDropdown = () => {
   }
 
   const handleUserLogout = async () => {
-    // Redirect to login page
-    router.push('/login')
+    try {
+      await authService.logOutUser()
+      await signOut({ callbackUrl: '/login' })
+    } catch (error: any) {
+      const { response } = error
+
+      if (response.status === 500) {
+        toast.error(response.data.message)
+      }
+    }
   }
 
   return (
@@ -109,9 +126,9 @@ const UserDropdown = () => {
                     <Avatar alt='John Doe' src='/images/avatars/1.png' />
                     <div className='flex items-start flex-col'>
                       <Typography variant='body2' className='font-medium' color='text.primary'>
-                        Sakib Hossain
+                        {user?.name}
                       </Typography>
-                      <Typography variant='caption'>sakib129@gmail.com</Typography>
+                      <Typography variant='caption'>{user?.email}</Typography>
                     </div>
                   </div>
                   <Divider className='mlb-1' />
@@ -119,7 +136,7 @@ const UserDropdown = () => {
                     <i className='ri-user-3-line' />
                     <Typography color='text.primary'>My Profile</Typography>
                   </MenuItem>
-                  
+
                   <div className='flex items-center plb-1.5 pli-4'>
                     <Button
                       fullWidth

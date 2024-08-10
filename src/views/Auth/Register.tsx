@@ -5,6 +5,7 @@ import { useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm } from 'react-hook-form'
@@ -18,15 +19,20 @@ import TextField from '@mui/material/TextField'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
 import Checkbox from '@mui/material/Checkbox'
-import Button from '@mui/material/Button'
+import { LoadingButton } from '@mui/lab'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Divider from '@mui/material/Divider'
+
+// Third party imports
+
+import { toast } from 'react-toastify'
 
 // Form Validation Import
 import { FormControl } from '@mui/material'
 
 // Type Imports
 import type { Mode } from '@core/types'
+import type { RegisterFormValues } from '@/types/FormTypes'
 
 // Component Imports
 import Logo from '@components/layout/shared/Logo'
@@ -34,16 +40,18 @@ import Logo from '@components/layout/shared/Logo'
 // Hook Imports
 import { useImageVariant } from '@core/hooks/useImageVariant'
 
-
 import RegisterValidation from '@/validation/RegisterValidation'
-import type { RegisterFormValues } from '@/types/FormTypes'
 
 import FormErrors from '@/validation/FromError'
+import { authService } from '@/service/authService'
 
 const Register = ({ mode }: { mode: Mode }) => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [isConfirmPasswordShown, setConfirmPasswordShown] = useState(false)
+  const [isLoading, setLoading] = useState(false)
+
+  const router = useRouter()
 
   // Vars
   const darkImg = '/images/pages/auth-v1-mask-2-dark.png'
@@ -56,7 +64,7 @@ const Register = ({ mode }: { mode: Mode }) => {
   const {
     register,
     handleSubmit,
-    reset,
+    setError,
     formState: { errors }
   } = useForm<RegisterFormValues>({
     defaultValues: {
@@ -70,11 +78,28 @@ const Register = ({ mode }: { mode: Mode }) => {
     resolver: yupResolver<RegisterFormValues>(yup.object().shape(RegisterValidation))
   })
 
-  console.log(errors)
+  const RegisterUser = async (data: RegisterFormValues) => {
+    try {
+      setLoading(true)
+      const res: any = await authService.registerUser(data)
 
-  const RegisterUser = (data: any) => {
-    console.log(data)
-    reset()
+      toast.success(res?.message)
+      router.push('/login')
+    } catch (error: any) {
+      setLoading(false)
+      const { response } = error
+
+      if (response.status === 422) {
+        Object.entries(response.data).forEach(([key, value]: any) => {
+          setError(key as keyof RegisterFormValues, {
+            type: 'manual',
+            message: value[0]
+          })
+        })
+      } else if (response.status === 500) {
+        toast.error(response.data.message)
+      }
+    }
   }
 
   return (
@@ -158,9 +183,9 @@ const Register = ({ mode }: { mode: Mode }) => {
                 }
               />
 
-              <Button fullWidth variant='contained' type='submit'>
+              <LoadingButton loading={isLoading} fullWidth variant='contained' type='submit'>
                 Sign Up
-              </Button>
+              </LoadingButton>
               <div className='flex justify-center items-center flex-wrap gap-2'>
                 <Typography>Already have an account?</Typography>
                 <Typography component={Link} href={'/login'} color='primary'>

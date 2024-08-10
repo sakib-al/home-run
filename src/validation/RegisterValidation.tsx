@@ -8,7 +8,10 @@ const RegisterValidation = {
     .string()
     .oneOf([yup.ref('password'), ''], 'Passwords must match')
     .required('Confirm password is required'),
-  terms: yup.bool().oneOf([true], 'Please accept our terms and conditions')
+  terms: yup
+    .boolean()
+    .oneOf([true], 'Please accept terms and conditions')
+    .required('Please accept terms and conditions')
 }
 
 export default RegisterValidation

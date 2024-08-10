@@ -1,3 +1,7 @@
+// Third party components
+
+import { ToastContainer } from 'react-toastify'
+
 // Type Imports
 import type { ChildrenType } from '@core/types'
 
@@ -8,6 +12,9 @@ import BlankLayout from '@layouts/BlankLayout'
 // Util Imports
 import { getSystemMode } from '@core/utils/serverHelpers'
 
+import 'react-toastify/dist/ReactToastify.css'
+import GuestGuard from '@/hocs/GuestGuard'
+
 type Props = ChildrenType
 
 const Layout = ({ children }: Props) => {
@@ -17,7 +24,10 @@ const Layout = ({ children }: Props) => {
 
   return (
     <Providers direction={direction}>
-      <BlankLayout systemMode={systemMode}>{children}</BlankLayout>
+      <GuestGuard>
+        <ToastContainer />
+        <BlankLayout systemMode={systemMode}>{children}</BlankLayout>
+      </GuestGuard>
     </Providers>
   )
 }

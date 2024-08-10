@@ -20,7 +20,7 @@ import TextField from '@mui/material/TextField'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
 import Checkbox from '@mui/material/Checkbox'
-import Button from '@mui/material/Button'
+import { LoadingButton } from '@mui/lab'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Divider from '@mui/material/Divider'
 import { FormControl } from '@mui/material'
@@ -44,6 +44,7 @@ import FormErrors from '@/validation/FromError'
 const Login = ({ mode }: { mode: Mode }) => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
+  const [isLoading, setLoading] = useState(false)
 
   // Vars
   const darkImg = '/images/pages/auth-v1-mask-1-dark.png'
@@ -61,6 +62,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors }
   } = useForm<LoginFormValues>({
     defaultValues: {
@@ -72,6 +74,8 @@ const Login = ({ mode }: { mode: Mode }) => {
   })
 
   const handleLogin = async (data: LoginFormValues) => {
+    setLoading(true)
+
     const res = await signIn('credentials', {
       email: data.email,
       password: data.password,
@@ -86,7 +90,12 @@ const Login = ({ mode }: { mode: Mode }) => {
       if (res?.error) {
         const error = JSON.parse(res.error)
 
-        console.log(error)
+        setError('email', {
+          type: 'manual',
+          message: error?.email
+        })
+
+        setLoading(false)
       }
     }
   }
@@ -103,7 +112,7 @@ const Login = ({ mode }: { mode: Mode }) => {
               <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}! 👋🏻`}</Typography>
               <Typography className='mbs-1'>Please sign-in to your account and start the adventure</Typography>
             </div>
-            <form noValidate autoComplete='off' onSubmit={handleSubmit(handleLogin)} className='flex flex-col gap-5'>
+            <form noValidate onSubmit={handleSubmit(handleLogin)} className='flex flex-col gap-5'>
               <FormControl>
                 <TextField autoFocus fullWidth label='Email' {...register('email')} error={Boolean(errors?.email)} />
                 <FormErrors error={errors?.email} sx={{ marginLeft: '0px' }} />
@@ -140,9 +149,9 @@ const Login = ({ mode }: { mode: Mode }) => {
                   Forgot password?
                 </Typography>
               </div>
-              <Button fullWidth variant='contained' type='submit'>
+              <LoadingButton loading={isLoading} fullWidth variant='contained' type='submit'>
                 Log In
-              </Button>
+              </LoadingButton>
               <div className='flex justify-center items-center flex-wrap gap-2'>
                 <Typography>New on our platform?</Typography>
                 <Typography component={Link} href={'/register'} color='primary'>
